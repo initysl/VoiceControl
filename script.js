@@ -1,157 +1,305 @@
-const micBtn = document.getElementById('microphone');
-const micIcon = document.querySelector('.mic');
-const micRec = document.querySelector('.mic-rec');
+class VoiceScrollController {
+  constructor(config = {}) {
+    // Configuration with defaults
+    this.config = {
+      idleDuration: config.idleDuration || 10000,
+      debounceDelay: config.debounceDelay || 500,
+      scrollAmount: config.scrollAmount || 100,
+      lang: config.lang || 'en-US',
+      ...config
+    };
 
-let isListening = false;
-let recognition;
-let idleTimeout;
+    // DOM elements
+    this.elements = {
+      micBtn: document.getElementById('microphone'),
+      micIcon: document.querySelector('.mic'),
+      micRec: document.querySelector('.mic-rec')
+    };
 
-const idleDuration = 10000; // Stop listening after 10 seconds of inactivity
-const debounceDelay = 500; // 0.5 second debounce delay for repeated commands
-let lastCommand = '';
-let lastCommandTime = 0;
+    // State management
+    this.state = {
+      isListening: false,
+      lastCommand: '',
+      lastCommandTime: 0
+    };
 
-const commandsList = `
-Available Commands:
-- up: Scroll up
-- down: Scroll down
-- top: Scroll to the top of the page
-- bottom: Scroll to the bottom of the page
-- fly: Scroll up half a page
-- jump: Scroll down half a page
-`;
+    // Recognition instance
+    this.recognition = null;
+    this.idleTimeout = null;
 
-micBtn.addEventListener('click', () => {
-  if (!isListening) {
-    startRecognition();
-  } else {
-    stopRecognition();
+    // Noise words to filter out
+    this.noiseWords = new Set([
+      'uh', 'um', 'like', 'you know', 'so', 
+      'ohhh', 'heyy', 'haaaa', 'shhshshh'
+    ]);
+
+    // Command definitions
+    this.commands = {
+      up: {
+        description: 'Scroll up',
+        action: () => this.smoothScroll(window.scrollY - this.config.scrollAmount)
+      },
+      down: {
+        description: 'Scroll down',
+        action: () => this.smoothScroll(window.scrollY + this.config.scrollAmount)
+      },
+      top: {
+        description: 'Scroll to the top of the page',
+        action: () => this.smoothScroll(0)
+      },
+      bottom: {
+        description: 'Scroll to the bottom of the page',
+        action: () => this.smoothScroll(document.body.scrollHeight)
+      },
+      fly: {
+        description: 'Scroll up half a page',
+        action: () => this.smoothScroll(window.scrollY - window.innerHeight / 2)
+      },
+      jump: {
+        description: 'Scroll down half a page',
+        action: () => this.smoothScroll(window.scrollY + window.innerHeight / 2)
+      }
+    };
+
+    this.init();
   }
-});
 
-function startRecognition() {
-  // Start speech recognition
-  recognition = new (window.SpeechRecognition ||
-    window.webkitSpeechRecognition ||
-    window.mozSpeechRecognition ||
-    window.msSpeechRecognition)();
+  init() {
+    if (!this.validateBrowserSupport()) {
+      console.error('Speech recognition is not supported in this browser');
+      this.disableMicButton();
+      return;
+    }
 
-  recognition.lang = 'en-US';
-  recognition.continuous = true;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
+    if (!this.validateDOMElements()) {
+      console.error('Required DOM elements not found');
+      return;
+    }
 
-  alert(commandsList);
-  recognition.start();
-  micIcon.classList.add('active');
-  isListening = true;
+    this.attachEventListeners();
+  }
 
-  // Reset idle timeout when recognition starts
-  resetIdleTimeout();
+  validateBrowserSupport() {
+    return !!(
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition ||
+      window.mozSpeechRecognition ||
+      window.msSpeechRecognition
+    );
+  }
 
-  // Define scroll amount and noise words
-  const scrollAmount = 100;
-  const noiseWords = [
-    'uh',
-    'ohhh',
-    'um',
-    'like',
-    'you know',
-    'so',
-    'heyy',
-    'haaaa',
-    'shhshshh',
-  ];
 
-  // Handle speech recognition results
-  recognition.onresult = (event) => {
-    resetIdleTimeout(); // Reset idle timeout on each result
+  validateDOMElements() {
+    return Object.values(this.elements).every(el => el !== null);
+  }
+
+  disableMicButton() {
+    if (this.elements.micBtn) {
+      this.elements.micBtn.disabled = true;
+      this.elements.micBtn.title = 'Speech recognition not supported';
+    }
+  }
+
+
+  attachEventListeners() {
+    this.elements.micBtn.addEventListener('click', () => this.toggleRecognition());
+  }
+
+
+  toggleRecognition() {
+    if (this.state.isListening) {
+      this.stopRecognition();
+    } else {
+      this.startRecognition();
+    }
+  }
+
+
+  startRecognition() {
+    try {
+      const SpeechRecognition = 
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition ||
+        window.mozSpeechRecognition ||
+        window.msSpeechRecognition;
+
+      this.recognition = new SpeechRecognition();
+      this.recognition.lang = this.config.lang;
+      this.recognition.continuous = true;
+      this.recognition.interimResults = false;
+      this.recognition.maxAlternatives = 1;
+
+      this.setupRecognitionHandlers();
+      this.recognition.start();
+      
+      this.updateUIState(true);
+      this.showCommandsList();
+      this.resetIdleTimeout();
+
+      console.log('Speech recognition started');
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error);
+      this.handleRecognitionError(error);
+    }
+  }
+
+  setupRecognitionHandlers() {
+    this.recognition.onresult = (event) => this.handleRecognitionResult(event);
+    this.recognition.onerror = (event) => this.handleRecognitionError(event);
+    this.recognition.onend = () => this.handleRecognitionEnd();
+  }
+
+  handleRecognitionResult(event) {
+    this.resetIdleTimeout();
 
     const transcript = event.results[event.results.length - 1][0].transcript;
-    const words = transcript
-      .toLowerCase()
-      .split(' ')
-      .filter((word) => !noiseWords.includes(word));
+    const cleanedWords = this.cleanTranscript(transcript);
 
-    words.forEach((word) => {
-      // Define possible commands and their corresponding actions
-      const commands = {
-        up: () =>
-          window.scrollTo({
-            top: window.scrollY - scrollAmount,
-            behavior: 'smooth',
-          }),
-        down: () =>
-          window.scrollTo({
-            top: window.scrollY + scrollAmount,
-            behavior: 'smooth',
-          }),
-        top: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-        bottom: () =>
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth',
-          }),
-        fly: () =>
-          window.scrollTo({
-            top: window.scrollY - window.innerHeight / 2,
-            behavior: 'smooth',
-          }),
-        jump: () =>
-          window.scrollTo({
-            top: window.scrollY + window.innerHeight / 2,
-            behavior: 'smooth',
-          }),
-      };
-
-      const command = Object.keys(commands).find(
-        (key) => new RegExp(`\\b${key}\\b`).test(word) // Use regex to match whole words
-      );
-
-      if (command && canExecuteCommand(command)) {
-        commands[command]();
-        lastCommand = command;
-        lastCommandTime = Date.now();
-        console.log('Command recognized:', command);
-      } else {
-        console.log('Command not recognized or debounced:', word);
-      }
-    });
-  };
-
-  recognition.onerror = (event) => {
-    console.error('Speech recognition error:', event.error);
-  };
-
-  recognition.onend = () => {
-    if (isListening) {
-      recognition.start(); // Restart recognition if it was stopped unexpectedly
-    } else {
-      stopRecognition();
-    }
-  };
-}
-
-function stopRecognition() {
-  if (recognition) {
-    recognition.stop();
+    cleanedWords.forEach(word => this.processCommand(word));
   }
-  clearTimeout(idleTimeout);
-  isListening = false;
-  micIcon.classList.remove('active');
-  console.log('Speech recognition stopped');
+
+  cleanTranscript(transcript) {
+    return transcript
+      .toLowerCase()
+      .trim()
+      .split(/\s+/)
+      .filter(word => !this.noiseWords.has(word));
+  }
+
+  processCommand(word) {
+    const command = this.findMatchingCommand(word);
+
+    if (command && this.canExecuteCommand(command)) {
+      this.executeCommand(command);
+    } else if (command) {
+      console.log(`Command "${command}" debounced`);
+    } else {
+      console.log(`Unknown command: "${word}"`);
+    }
+  }
+
+  findMatchingCommand(word) {
+    return Object.keys(this.commands).find(cmd => 
+      new RegExp(`\\b${cmd}\\b`, 'i').test(word)
+    );
+  }
+
+
+  canExecuteCommand(command) {
+    const now = Date.now();
+    const timeSinceLastCommand = now - this.state.lastCommandTime;
+
+    return (
+      command !== this.state.lastCommand || 
+      timeSinceLastCommand > this.config.debounceDelay
+    );
+  }
+
+  executeCommand(command) {
+    try {
+      this.commands[command].action();
+      this.state.lastCommand = command;
+      this.state.lastCommandTime = Date.now();
+      console.log(`Command executed: "${command}"`);
+    } catch (error) {
+      console.error(`Error executing command "${command}":`, error);
+    }
+  }
+
+
+  smoothScroll(position) {
+    window.scrollTo({
+      top: Math.max(0, position),
+      behavior: 'smooth'
+    });
+  }
+
+  /**
+   * Handle recognition errors
+   */
+  handleRecognitionError(event) {
+    const errorMessage = event?.error || 'Unknown error';
+    console.error('Speech recognition error:', errorMessage);
+
+    // Handle specific error types
+    if (errorMessage === 'not-allowed') {
+      alert('Microphone access denied. Please grant permission to use voice commands.');
+      this.stopRecognition();
+    }
+  }
+
+
+  handleRecognitionEnd() {
+    if (this.state.isListening) {
+      // Restart recognition if it ended unexpectedly
+      try {
+        this.recognition.start();
+      } catch (error) {
+        console.error('Failed to restart recognition:', error);
+        this.stopRecognition();
+      }
+    }
+  }
+
+  stopRecognition() {
+    if (this.recognition) {
+      this.recognition.stop();
+      this.recognition = null;
+    }
+
+    this.clearIdleTimeout();
+    this.updateUIState(false);
+    
+    console.log('Speech recognition stopped');
+  }
+
+  updateUIState(isActive) {
+    this.state.isListening = isActive;
+    
+    if (isActive) {
+      this.elements.micIcon.classList.add('active');
+    } else {
+      this.elements.micIcon.classList.remove('active');
+    }
+  }
+
+  showCommandsList() {
+    const commandsText = Object.entries(this.commands)
+      .map(([cmd, info]) => `- ${cmd}: ${info.description}`)
+      .join('\n');
+
+    alert(`Available Voice Commands:\n\n${commandsText}`);
+  }
+
+  resetIdleTimeout() {
+    this.clearIdleTimeout();
+    this.idleTimeout = setTimeout(
+      () => this.stopRecognition(),
+      this.config.idleDuration
+    );
+  }
+
+
+  clearIdleTimeout() {
+    if (this.idleTimeout) {
+      clearTimeout(this.idleTimeout);
+      this.idleTimeout = null;
+    }
+  }
+
+
+  destroy() {
+    this.stopRecognition();
+    this.elements.micBtn.removeEventListener('click', this.toggleRecognition);
+    this.recognition = null;
+  }
 }
 
-function resetIdleTimeout() {
-  clearTimeout(idleTimeout);
-  idleTimeout = setTimeout(() => {
-    stopRecognition();
-  }, idleDuration);
-}
+// Initialize the voice scroll controller
+const voiceScroll = new VoiceScrollController({
+  idleDuration: 10000,
+  debounceDelay: 500,
+  scrollAmount: 100,
+  lang: 'en-US'
+});
 
-function canExecuteCommand(command) {
-  const now = Date.now();
-  const timeSinceLastCommand = now - lastCommandTime;
-
-  return command !== lastCommand || timeSinceLastCommand > debounceDelay;
-}
