@@ -50,29 +50,6 @@ header h1 {
   margin-bottom: 1rem;
 }
 
-nav ul {
-  list-style: none;
-  display: flex;
-  flex-direction: row;
-  gap: 2rem;
-}
-
-nav a {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  transition: var(--transition);
-  padding: 0.5rem 0;
-  border-bottom: 2px solid transparent;
-}
-
-nav a:hover,
-nav a:focus {
-  color: var(--secondary-color);
-  border-bottom-color: var(--secondary-color);
-  outline: none;
-}
-
 main {
   flex: 1;
   max-width: var(--max-width);
