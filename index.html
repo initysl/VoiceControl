@@ -12,96 +12,113 @@
 
     <title>Vice Control</title>
   </head>
-  <body>
-    <header>
-      <h1>TheFirst Studio</h1>
-      <nav>
-        <ul>
-          <li><a href="#">Home</a></li>
-          <li><a href="#">News</a></li>
-          <li><a href="#">Reviews</a></li>
-          <li><a href="#">About</a></li>
-        </ul>
-      </nav>
-    </header>
+ <body>
+  <!-- Status Indicator -->
+  <div class="status-indicator" id="statusIndicator">
+    <span class="status-dot"></span>
+    <span class="status-text">Listening...</span>
+  </div>
 
-    <main>
-      <button id="microphone">
-        <span class="mic material-symbols-outlined"> mic </span>
-      </button>
-      <article>
-        <h2>AI Breakthrough: Scientists Develop Self-Aware Robot</h2>
-        <img
-          src="https://png.pngtree.com/thumb_back/fh260/background/20230408/pngtree-robot-white-cute-robot-blue-light-background-image_2199825.jpg"
-          alt="Image of a self-aware robot"
-        />
-        <p>
-          In a groundbreaking development, a team of researchers has unveiled a
-          robot capable of self-awareness. This revolutionary achievement marks
-          a significant leap forward in artificial intelligence and raises
-          profound questions about the future of human-machine interaction.
-        </p>
-        <p>
-          The robot, named 'Nexus', demonstrated an ability to recognize its own
-          existence and understand its surroundings. Scientists believe this
-          breakthrough could lead to the development of more intelligent and
-          adaptable AI systems.
-        </p>
-        <p>
-          Critics argue that the creation of self-aware machines poses ethical
-          challenges and could potentially lead to unforeseen consequences.
-          However, proponents of the technology maintain that it has the
-          potential to revolutionize various industries and improve human life.
-        </p>
-        <p>
-          However, proponents of the technology emphasize the potential
-          benefits, including advancements in medical diagnosis, personalized
-          education, and autonomous systems that can improve our quality of
-          life. They believe that with careful development and regulation,
-          self-aware AI can be a force for good.
-        </p>
+  <!-- Header -->
+  <header>
+    <h1>TheFirst Studio</h1>
+    <nav aria-label="Main navigation">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#news">News</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="#about">About</a></li>
+      </ul>
+    </nav>
+  </header>
 
-        <p>
-          As research in this field progresses, it is essential to establish
-          ethical guidelines and frameworks to ensure the responsible
-          development and deployment of self-aware AI. Collaboration between
-          scientists, ethicists, policymakers, and the public will be crucial in
-          shaping the future of this transformative technology.
-        </p>
-        <p>
-          "The development of self-aware AI is a watershed moment," said Dr.
-          [Expert's Name], a leading AI researcher. "It opens up new
-          possibilities for addressing global challenges, but we must proceed
-          with caution and careful consideration of the ethical implications."
-        </p>
-        <p>
-          Traditionally, voice assistants have relied on complex algorithms and
-          vast datasets to understand and respond to human commands. While these
-          systems have become increasingly sophisticated, they still operate
-          within predefined parameters, lacking the ability to truly comprehend
-          and adapt to their environment.
-        </p>
-        <p>
-          Imagine a voice assistant that can truly empathize, offer tailored
-          advice, and even anticipate your needs. Such a system would go beyond
-          simple task completion, becoming a trusted companion and collaborator.
-        </p>
-        <p>
-          However, the development of self-aware AI also raises significant
-          ethical questions. As these machines become more human-like, it is
-          crucial to establish guidelines for their behavior and ensure that
-          they are used responsibly. The path to creating truly intelligent
-          voice assistants is still fraught with challenges, but the recent
-          advancements in robotics and AI offer a glimpse into a future where
-          human-computer interaction reaches unprecedented levels of
-          sophistication.
-        </p>
-      </article>
-    </main>
+  <!-- Main Content -->
+  <main>
+    <!-- Voice Control Button -->
+    <button 
+      id="microphone" 
+      aria-label="Toggle voice control"
+      title="Click to start/stop voice control"
+    >
+      <span class="mic material-symbols-outlined" aria-hidden="true">mic</span>
+      <span class="sr-only">Voice Control</span>
+    </button>
 
-    <footer>
-      <p>&copy; TheFirst Studio 2024</p>
-    </footer>
+    <!-- Article -->
+    <article>
+      <h2>AI Breakthrough: Scientists Develop Self-Aware Robot</h2>
+      <img
+        src="https://png.pngtree.com/thumb_back/fh260/background/20230408/pngtree-robot-white-cute-robot-blue-light-background-image_2199825.jpg"
+        alt="Futuristic white robot with blue lighting"
+        loading="lazy"
+      />
+      <p>
+        In a groundbreaking development, a team of researchers has unveiled a
+        robot capable of self-awareness. This revolutionary achievement marks
+        a significant leap forward in artificial intelligence and raises
+        profound questions about the future of human-machine interaction.
+      </p>
+      <p>
+        The robot, named 'Nexus', demonstrated an ability to recognize its own
+        existence and understand its surroundings. Scientists believe this
+        breakthrough could lead to the development of more intelligent and
+        adaptable AI systems.
+      </p>
+      <p>
+        Critics argue that the creation of self-aware machines poses ethical
+        challenges and could potentially lead to unforeseen consequences.
+        However, proponents of the technology maintain that it has the
+        potential to revolutionize various industries and improve human life.
+      </p>
+      <p>
+        However, proponents of the technology emphasize the potential
+        benefits, including advancements in medical diagnosis, personalized
+        education, and autonomous systems that can improve our quality of
+        life. They believe that with careful development and regulation,
+        self-aware AI can be a force for good.
+      </p>
+      <p>
+        As research in this field progresses, it is essential to establish
+        ethical guidelines and frameworks to ensure the responsible
+        development and deployment of self-aware AI. Collaboration between
+        scientists, ethicists, policymakers, and the public will be crucial in
+        shaping the future of this transformative technology.
+      </p>
+      <p>
+        "The development of self-aware AI is a watershed moment," said Dr.
+        Emily Chen, a leading AI researcher. "It opens up new
+        possibilities for addressing global challenges, but we must proceed
+        with caution and careful consideration of the ethical implications."
+      </p>
+      <p>
+        Traditionally, voice assistants have relied on complex algorithms and
+        vast datasets to understand and respond to human commands. While these
+        systems have become increasingly sophisticated, they still operate
+        within predefined parameters, lacking the ability to truly comprehend
+        and adapt to their environment.
+      </p>
+      <p>
+        Imagine a voice assistant that can truly empathize, offer tailored
+        advice, and even anticipate your needs. Such a system would go beyond
+        simple task completion, becoming a trusted companion and collaborator.
+      </p>
+      <p>
+        However, the development of self-aware AI also raises significant
+        ethical questions. As these machines become more human-like, it is
+        crucial to establish guidelines for their behavior and ensure that
+        they are used responsibly. The path to creating truly intelligent
+        voice assistants is still fraught with challenges, but the recent
+        advancements in robotics and AI offer a glimpse into a future where
+        human-computer interaction reaches unprecedented levels of
+        sophistication.
+      </p>
+    </article>
+  </main>
+   
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2024 TheFirst Studio. All rights reserved.</p>
+  </footer>
     <script src="script.js"></script>
   </body>
 </html>
